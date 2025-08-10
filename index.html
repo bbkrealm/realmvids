@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidStream - Your Video Hub</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Custom styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* Dark background */
+            color: #f3f4f6;
+        }
+        .video-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .video-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        /* Style for the modal background */
+        #videoModal {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header Section -->
+    <header class="bg-gray-900/80 backdrop-blur-sm shadow-lg sticky top-0 z-40">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <!-- Logo -->
+                <div class="flex-shrink-0">
+                    <a href="#" class="flex items-center space-x-2">
+                        <svg class="h-8 w-8 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z" />
+                        </svg>
+                        <span class="text-2xl font-bold text-white">VidStream</span>
+                    </a>
+                </div>
+                <!-- Search Bar -->
+                <div class="flex-1 flex justify-center px-2 lg:ml-6 lg:justify-end">
+                    <div class="max-w-lg w-full lg:max-w-xs">
+                        <label for="search" class="sr-only">Search</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <input id="search" name="search" class="block w-full pl-10 pr-3 py-2 border border-transparent rounded-md leading-5 bg-gray-700 text-gray-300 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-white focus:ring-white focus:text-gray-900 sm:text-sm" placeholder="Search for videos..." type="search">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <h1 id="page-title" class="text-3xl font-bold tracking-tight text-white mb-8">All Videos</h1>
+        
+        <!-- Video Grid -->
+        <div id="video-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <!-- Video cards will be dynamically inserted here -->
+        </div>
+
+        <!-- No Results Message -->
+        <div id="no-results" class="hidden text-center py-16">
+            <h2 class="text-2xl font-semibold text-gray-400">No videos found</h1>
+            <p class="mt-2 text-gray-500">Try adjusting your search terms.</p>
+        </div>
+    </main>
+
+    <!-- Video Player Modal -->
+    <div id="videoModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="bg-gray-900 rounded-lg shadow-2xl w-11/12 max-w-4xl relative">
+            <button id="closeModal" class="absolute -top-3 -right-3 h-10 w-10 bg-white text-black rounded-full flex items-center justify-center z-10 hover:bg-gray-200 transition-colors">
+                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <div class="aspect-w-16 aspect-h-9">
+                <video id="modalVideoPlayer" class="w-full h-full rounded-lg" controls autoplay playsinline>
+                    <!-- Video source will be set dynamically -->
+                </video>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 mt-16">
+        <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-gray-400">
+            <p>&copy; 2025 VidStream. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- DATA ---
+        // This is your video database.
+        // Replace these with your actual video details.
+        // For a true static site, video files should be hosted on a CDN or cloud storage (like AWS S3, Google Cloud Storage, etc.)
+        const videos = [
+            {
+                id: 1,
+                title: "Exploring the Alps",
+                description: "A breathtaking journey through the Swiss Alps, showcasing stunning landscapes and serene nature.",
+                thumbnailUrl: "https://placehold.co/600x400/3498db/ffffff?text=Alps",
+                videoUrl: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+            },
+            {
+                id: 2,
+                title: "Cyberpunk City Drive",
+                description: "A nighttime drive through a futuristic city, filled with neon lights and high-tech architecture.",
+                thumbnailUrl: "https://placehold.co/600x400/9b59b6/ffffff?text=Cyberpunk",
+                videoUrl: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4"
+            },
+            {
+                id: 3,
+                title: "The Art of Cooking",
+                description: "Learn how to prepare a delicious pasta dish from scratch with a master chef.",
+                thumbnailUrl: "https://placehold.co/600x400/e74c3c/ffffff?text=Cooking",
+                videoUrl: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4"
+            },
+            {
+                id: 4,
+                title: "Wildlife Wonders",
+                description: "A close-up look at the majestic lions of the Serengeti during their morning hunt.",
+                thumbnailUrl: "https://placehold.co/600x400/f1c40f/ffffff?text=Wildlife",
+                videoUrl: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4"
+            },
+            {
+                id: 5,
+                title: "Oceanic Adventures",
+                description: "Dive deep into the blue ocean and discover the vibrant life hidden beneath the waves.",
+                thumbnailUrl: "https://placehold.co/600x400/1abc9c/ffffff?text=Ocean",
+                videoUrl: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4"
+            },
+            {
+                id: 6,
+                title: "Space Exploration",
+                description: "An animated journey to the outer reaches of our galaxy, visiting strange new worlds.",
+                thumbnailUrl: "https://placehold.co/600x400/34495e/ffffff?text=Space",
+                videoUrl: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4"
+            },
+            {
+                id: 7,
+                title: "Urban Architecture",
+                description: "A study of modern architectural marvels in a bustling metropolis.",
+                thumbnailUrl: "https://placehold.co/600x400/7f8c8d/ffffff?text=Architecture",
+                videoUrl: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
+            },
+            {
+                id: 8,
+                title: "The Joy of Painting",
+                description: "Follow along with a calm tutorial on painting a serene forest landscape.",
+                thumbnailUrl: "https://placehold.co/600x400/2ecc71/ffffff?text=Painting",
+                videoUrl: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4"
+            }
+        ];
+
+        // --- DOM ELEMENTS ---
+        const videoGrid = document.getElementById('video-grid');
+        const searchInput = document.getElementById('search');
+        const noResultsMessage = document.getElementById('no-results');
+        const pageTitle = document.getElementById('page-title');
+        const videoModal = document.getElementById('videoModal');
+        const closeModalBtn = document.getElementById('closeModal');
+        const modalVideoPlayer = document.getElementById('modalVideoPlayer');
+
+        // --- FUNCTIONS ---
+
+        /**
+         * Renders a list of video cards to the DOM.
+         * @param {Array} videosToRender - The array of video objects to display.
+         */
+        function renderVideos(videosToRender) {
+            // Clear the existing grid content
+            videoGrid.innerHTML = '';
+
+            // Check if there are any videos to render
+            if (videosToRender.length === 0) {
+                videoGrid.classList.add('hidden');
+                noResultsMessage.classList.remove('hidden');
+            } else {
+                videoGrid.classList.remove('hidden');
+                noResultsMessage.classList.add('hidden');
+            }
+
+            // Create and append a card for each video
+            videosToRender.forEach(video => {
+                const card = document.createElement('div');
+                card.className = 'video-card bg-gray-800 rounded-lg overflow-hidden shadow-lg cursor-pointer';
+                card.innerHTML = `
+                    <div class="aspect-w-16 aspect-h-9">
+                        <img class="w-full h-full object-cover" src="${video.thumbnailUrl}" alt="${video.title}" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1f2937/ffffff?text=Video+Not+Found';">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold text-white truncate">${video.title}</h3>
+                        <p class="text-sm text-gray-400 mt-1 h-10 overflow-hidden">${video.description}</p>
+                    </div>
+                `;
+                // Add event listener to open the modal on click
+                card.addEventListener('click', () => openModal(video.videoUrl));
+                videoGrid.appendChild(card);
+            });
+        }
+
+        /**
+         * Filters videos based on the search input and re-renders the grid.
+         */
+        function handleSearch() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            
+            if (searchTerm) {
+                pageTitle.textContent = `Search results for "${searchTerm}"`;
+            } else {
+                pageTitle.textContent = 'All Videos';
+            }
+
+            const filteredVideos = videos.filter(video => 
+                video.title.toLowerCase().includes(searchTerm) || 
+                video.description.toLowerCase().includes(searchTerm)
+            );
+            renderVideos(filteredVideos);
+        }
+
+        /**
+         * Opens the video player modal.
+         * @param {string} videoUrl - The URL of the video to play.
+         */
+        function openModal(videoUrl) {
+            modalVideoPlayer.src = videoUrl;
+            videoModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
+
+        /**
+         * Closes the video player modal.
+         */
+        function closeModal() {
+            videoModal.classList.add('hidden');
+            modalVideoPlayer.pause();
+            modalVideoPlayer.src = ''; // Clear source
+            document.body.style.overflow = 'auto'; // Restore scrolling
+        }
+
+        // --- EVENT LISTENERS ---
+
+        // Initial render of all videos when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            renderVideos(videos);
+        });
+
+        // Listen for input in the search bar
+        searchInput.addEventListener('input', handleSearch);
+
+        // Listen for clicks on the modal close button
+        closeModalBtn.addEventListener('click', closeModal);
+
+        // Listen for clicks on the modal background to close it
+        videoModal.addEventListener('click', (event) => {
+            if (event.target === videoModal) {
+                closeModal();
+            }
+        });
+
+        // Listen for the 'Escape' key to close the modal
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !videoModal.classList.contains('hidden')) {
+                closeModal();
+            }
+        });
+
+    </script>
+</body>
+</html>
